@@ -1,0 +1,5 @@
+*~
+*.swp
+elm-package.json
+elm-stuff/
+elm.js
