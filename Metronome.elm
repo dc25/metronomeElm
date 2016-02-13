@@ -19,5 +19,8 @@ main =    Signal.foldp update 0 (every (second))
        |> Signal.map view 
 
 
-port tick : Signal Int
-port tick = foldp (\_ c -> c+1) 0 (every (2*second))
+port tick : Signal ()
+port tick = foldp (\_ c -> ()) () (every (2*second))
+
+port tock : Signal ()
+port tock = foldp (\_ c -> ()) () (every (2*second))
