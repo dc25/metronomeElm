@@ -1,10 +1,3 @@
-<head>
-    <title>Embedding Elm in HTML!</title>
-    <script type="text/javascript" src="Metronome.js"></script>
-</head>
-
-
-<h1>Metronome</h1>
 
 <div id="metronome" style="width:50%; height:400px;"></div>
 
@@ -13,22 +6,23 @@
     <audio id="tock" preload="auto"><source src="audio/tock.mp3" type="audio/wav"></audio>
 </div>
 
+<script type="text/javascript" src="Metronome.js"></script>
+
 <script type="text/javascript">
+
     function tick() {
         document.getElementById('tick').play();
     }
+
     function tock() {
         document.getElementById('tock').play();
     }
-</script>
 
-<script type="text/javascript">
     var metronomeDiv = document.getElementById('metronome');
     var metronome = Elm.embed(Elm.Metronome, metronomeDiv);
-    metronome.ports.tick.subscribe ( 
-        function(event) {
-            tick();
-        }
-    )
+
+    metronome.ports.tick.subscribe ( function(event) { tick(); } )
+    metronome.ports.tock.subscribe ( function(event) { tock(); } )
+
 </script>
 
