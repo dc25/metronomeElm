@@ -22,7 +22,7 @@ init =
   { angle = 1 * pi / 4
   , angVel = 0.0
   , length = 2
-  , slideRatio = 0.2
+  , slideRatio = 0.8
   , gravity = -9.81
   }
 
@@ -38,7 +38,7 @@ update model =
       , angVel = angVel'
     }
 
-view model =
+view model interval =
   let
     pendulumLength = scale * model.length 
     pendulumEndpoint = ( 0, pendulumLength)
@@ -58,19 +58,33 @@ view model =
             |> rotate (-pi/2)
             |> move metronomeEndpoint
         ]
+      |> rotate (pi + model.angle) 
   in
-    collage 700 1000
-      [ pendulum |> rotate (pi + model.angle) ]
+    div []
+    [ Html.text (toString interval)
+      , collage 700 1000 [ pendulum ] |> fromElement
+    ]
 
-modelSignal =  Signal.foldp (\_ model -> update model) init (every (dt * second))
 
-leftRightSignal = modelSignal
-                  |> Signal.map (\model -> model.angle < 0) 
-                  |> Signal.dropRepeats 
+modelSignal =  
+  Signal.foldp (\_ model -> update model) init (every (dt * second))
+
+leftRightSignal = 
+  modelSignal
+  |> Signal.map (\model -> model.angle < 0) 
+  |> Signal.dropRepeats 
+
 
 port leftRight : Signal Bool
 port leftRight = leftRightSignal
 
-main = modelSignal |> Signal.map view
+tickTimeSignal = 
+  every millisecond
+  |> sampleOn leftRightSignal 
 
+tickIntervalSignal = 
+  tickTimeSignal
+  |> Signal.foldp (\t (delta, prev) -> (t - prev, t)) (0,0) 
+  |> Signal.map (fst >> (\t -> round (60.0/(t/1000.0))))
 
+main = Signal.map2 view modelSignal tickIntervalSignal
