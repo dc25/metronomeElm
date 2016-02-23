@@ -3,6 +3,7 @@ module Metronome where
 import Color exposing (..)
 import Time exposing (..)
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Signal exposing (..)
@@ -61,9 +62,11 @@ view model interval =
       |> rotate (pi + model.angle) 
   in
     div []
-    [ Html.text (toString interval)
-      , collage 700 1000 [ pendulum ] |> fromElement
-    ]
+      [ div floatLeft [ div [] [ Html.text (toString interval) ]
+                      , div [] [ Html.text (toString interval) ]
+                      ]
+      , div floatLeft [collage 500 1000 [ pendulum ] |> fromElement]
+      ]
 
 
 modelSignal =  
@@ -88,3 +91,6 @@ tickIntervalSignal =
   |> Signal.map (fst >> (\t -> round (60.0/(t/1000.0))))
 
 main = Signal.map2 view modelSignal tickIntervalSignal
+
+
+floatLeft = [ style [ ("float", "left") ] ]
