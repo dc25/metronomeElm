@@ -39,18 +39,17 @@ control =
 update : Action -> Model -> Model
 update action model =
   case action of
-    Tick -> if model.started then 
-              let
-                angAcc = 1.0 * (model.gravity / (model.slideRatio * model.length)) * sin (model.angle)
-                angVel' = model.angVel + angAcc * dt
-                angle' = model.angle + angVel' * dt
-              in
-                { model
-                  | angle = angle'
-                  , angVel = angVel'
-                }
-            else model
-    ToggleStarted -> if model.started then { model | angle = pi/4, angVel = 0.0, started = not model.started } else { model | started = not model.started } 
+    Tick -> 
+      if model.started then 
+        let angAcc = 1.0 * (model.gravity / (model.slideRatio * model.length)) * sin (model.angle)
+            angVel' = model.angVel + angAcc * dt
+            angle' = model.angle + angVel' * dt
+        in { model | angle = angle' , angVel = angVel' }
+      else model
+    ToggleStarted -> 
+      if model.started then
+        { model | angle = pi/4, angVel = 0.0, started = not model.started } 
+      else { model | started = not model.started } 
     NoOp -> model
 
 view model =
@@ -73,14 +72,14 @@ view model =
             |> rotate (-pi/2)
             |> move metronomeEndpoint
         ]
-      |> rotate (pi + model.angle) |> move (0, 100)
+      |> rotate (pi + model.angle) -- display "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match.
   in
     div []
       [ div floatLeft [ button 
                           [ onClick control.address ToggleStarted ]
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
-      , div floatLeft [collage 500 1000 [ pendulum ] |> fromElement]
+      , div floatLeft [collage 500 800 [ pendulum ] |> fromElement]
       ]
 
 
