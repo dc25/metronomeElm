@@ -4,6 +4,7 @@ import Color exposing (..)
 import Time exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Signal exposing (..)
@@ -17,29 +18,42 @@ type alias Model =
   , length : Float
   , slideRatio : Float
   , gravity : Float
+  , started : Bool
   }
 
 init =
-  { angle = 1 * pi / 4
+  { angle = pi / 4
   , angVel = 0.0
   , length = 2
   , slideRatio = 0.8
   , gravity = -9.81
+  , started = True
   }
 
-update : Model -> Model
-update model =
-  let
-    angAcc = 1.0 * (model.gravity / (model.slideRatio * model.length)) * sin (model.angle)
-    angVel' = model.angVel + angAcc * dt
-    angle' = model.angle + angVel' * dt
-  in
-    { model
-      | angle = angle'
-      , angVel = angVel'
-    }
+type Action = NoOp | ToggleStarted | Tick
 
-view model interval =
+control : Signal.Mailbox Action
+control =
+  Signal.mailbox NoOp
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    Tick -> if model.started then 
+              let
+                angAcc = 1.0 * (model.gravity / (model.slideRatio * model.length)) * sin (model.angle)
+                angVel' = model.angVel + angAcc * dt
+                angle' = model.angle + angVel' * dt
+              in
+                { model
+                  | angle = angle'
+                  , angVel = angVel'
+                }
+            else model
+    ToggleStarted -> if model.started then { model | angle = pi/4, angVel = 0.0, started = not model.started } else { model | started = not model.started } 
+    NoOp -> model
+
+view model =
   let
     pendulumLength = scale * model.length 
     pendulumEndpoint = ( 0, pendulumLength)
@@ -59,18 +73,22 @@ view model interval =
             |> rotate (-pi/2)
             |> move metronomeEndpoint
         ]
-      |> rotate (pi + model.angle) 
+      |> rotate (pi + model.angle) |> move (0, 100)
   in
     div []
-      [ div floatLeft [ div [] [ Html.text (toString interval) ]
-                      , div [] [ Html.text (toString interval) ]
+      [ div floatLeft [ button 
+                          [ onClick control.address ToggleStarted ]
+                          [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
       , div floatLeft [collage 500 1000 [ pendulum ] |> fromElement]
       ]
 
 
+tickSignal =   (every (dt * second)) |> map (always Tick)
+actionSignal = Signal.merge tickSignal control.signal
+
 modelSignal =  
-  Signal.foldp (\_ model -> update model) init (every (dt * second))
+  Signal.foldp (\action model -> update action model) init actionSignal
 
 leftRightSignal = 
   modelSignal
@@ -81,16 +99,7 @@ leftRightSignal =
 port leftRight : Signal Bool
 port leftRight = leftRightSignal
 
-tickTimeSignal = 
-  every millisecond
-  |> sampleOn leftRightSignal 
-
-tickIntervalSignal = 
-  tickTimeSignal
-  |> Signal.foldp (\t (delta, prev) -> (t - prev, t)) (0,0) 
-  |> Signal.map (fst >> (\t -> round (60.0/(t/1000.0))))
-
-main = Signal.map2 view modelSignal tickIntervalSignal
-
+main = Signal.map view modelSignal 
 
 floatLeft = [ style [ ("float", "left") ] ]
+
