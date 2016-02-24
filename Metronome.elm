@@ -35,10 +35,6 @@ init =
 
 type Action = NoOp | ToggleStarted | Tick | Click (Int,Int)
 
-control : Signal.Mailbox Action
-control =
-  Signal.mailbox NoOp
-
 update : Action -> Model -> Model
 update action model =
   case action of
@@ -88,15 +84,13 @@ view model =
       ]
 
 
+control = Signal.mailbox NoOp
+
+clicks = Mouse.position |> Signal.sampleOn Mouse.clicks |> Signal.map Click 
+
 tickSignal =   (every (dt * second)) |> map (always Tick)
-actionSignal = Signal.merge tickSignal control.signal
 
--- for a good time, remove "sampleOn Mouse.clicks" ;)
-clickActions : Signal Action
-clickActions =
-      Signal.map Click (Signal.sampleOn Mouse.clicks Mouse.position)
-
-
+actionSignal = Signal.mergeMany [tickSignal, control.signal, clicks]
 
 modelSignal =  
   Signal.foldp (\action model -> update action model) init actionSignal
