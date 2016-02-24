@@ -8,6 +8,7 @@ import Html.Events exposing (..)
 import Graphics.Collage exposing (..)
 import Graphics.Element exposing (..)
 import Signal exposing (..)
+import Mouse 
 
 dt = 0.01
 scale = 100
@@ -19,6 +20,7 @@ type alias Model =
   , slideRatio : Float
   , gravity : Float
   , started : Bool
+  , click : (Int, Int)
   }
 
 init =
@@ -28,9 +30,10 @@ init =
   , slideRatio = 0.8
   , gravity = -9.81
   , started = True
+  , click = (0,0)
   }
 
-type Action = NoOp | ToggleStarted | Tick
+type Action = NoOp | ToggleStarted | Tick | Click (Int,Int)
 
 control : Signal.Mailbox Action
 control =
@@ -51,6 +54,7 @@ update action model =
         { model | angle = pi/4, angVel = 0.0, started = not model.started } 
       else { model | started = not model.started } 
     NoOp -> model
+    Click (x,y) -> { model | click = (x,y) }
 
 view model =
   let
@@ -75,7 +79,8 @@ view model =
       |> rotate (pi + model.angle) -- display "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match.
   in
     div []
-      [ div floatLeft [ button 
+      [ div floatLeft [ fst model.click |> toString |> Html.text
+                      , button 
                           [ onClick control.address ToggleStarted ]
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
@@ -85,6 +90,13 @@ view model =
 
 tickSignal =   (every (dt * second)) |> map (always Tick)
 actionSignal = Signal.merge tickSignal control.signal
+
+-- for a good time, remove "sampleOn Mouse.clicks" ;)
+clickActions : Signal Action
+clickActions =
+      Signal.map Click (Signal.sampleOn Mouse.clicks Mouse.position)
+
+
 
 modelSignal =  
   Signal.foldp (\action model -> update action model) init actionSignal
