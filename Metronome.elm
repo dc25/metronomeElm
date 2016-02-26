@@ -10,7 +10,7 @@ import Graphics.Element exposing (..)
 import Signal exposing (..)
 import Mouse 
 import Svg exposing (svg)
-import Svg.Attributes exposing (version, viewBox, x, y, fill,points, transform)
+import Svg.Attributes exposing (version, viewBox, x, y, x1, y1, x2, y2, fill,points, transform)
 import Mouse 
 
 dt = 0.01
@@ -76,6 +76,10 @@ view model =
             |> move metronomeEndpoint
         ]
       |> rotate (pi + model.angle) -- display "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match.
+    svgPendulum = 
+      svg [ version "1.1", x "0", y "0", Svg.Attributes.width "300", Svg.Attributes.height "500", viewBox "-150 -250 300 500" ]
+          [ Svg.line [ x1 "0", y1 "0", x2 "300", y2 "500", Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
+          ]
   in
     div []
       [ div floatLeft [ fst model.click |> toString |> Html.text
@@ -83,8 +87,8 @@ view model =
                           [ onClick control.address ToggleStarted ]
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
-      , div floatLeft [ logo ]
-      , div floatLeft [collage 500 800 [ pendulum ] |> fromElement]
+      , div floatLeft [ svgPendulum ]
+      , div floatLeft [collage 300 500 [ pendulum ] |> fromElement]
       ]
 
 
@@ -115,17 +119,7 @@ floatLeft = [ style [ ("float", "left") ] ]
 
 logo : Html
 logo =
-  svg [ version "1.1", x "0", y "0", Svg.Attributes.width "120", Svg.Attributes.height "120", viewBox "0 0 400 400" ]
-    [ Svg.polygon [ fill "#F0AD00", points "161.649,152.782 231.514,82.916 91.783,82.916" ] []
-    , Svg.polygon [ fill "#7FD13B", points "8.867,0 79.241,70.375 232.213,70.375 161.838,0" ] []
-    , Svg.rect
-        [ fill "#7FD13B", x "192.99", y "107.392", Svg.Attributes.width "107.676", Svg.Attributes.height "108.167"
-        , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
-        ]
-        []
-    , Svg.polygon [ fill "#60B5CC", points "323.298,143.724 323.298,0 179.573,0" ] []
-    , Svg.polygon [ fill "#5A6378", points "152.781,161.649 0,8.868 0,314.432" ] []
-    , Svg.polygon [ fill "#F0AD00", points "255.522,246.655 323.298,314.432 323.298,178.879" ] []
-    , Svg.polygon [ fill "#60B5CC", points "161.649,170.517 8.869,323.298 314.43,323.298" ] []
+  svg [ version "1.1", x "0", y "0", Svg.Attributes.width "320", Svg.Attributes.height "320", viewBox "0 0 400 400" ]
+    [ Svg.line [ x1 "0", y1 "0", x2 "200", y2 "200", Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
     ]
 
