@@ -57,28 +57,33 @@ update action model =
 
 view model =
   let
+
     pendulumLength = scale * model.length 
-    pendulumEndpoint = ( 0, pendulumLength)
-    weightPlacement = ( 0, (model.slideRatio) * pendulumLength)
-    metronomeEndpoint = ( 0, -1.6 * pendulumLength )
+    metronomeLength = -1.6 * pendulumLength 
+
     pendulum =
       group
-        [ segment metronomeEndpoint pendulumEndpoint
+        [ segment ( 0, metronomeLength) (0, pendulumLength)
             |> traced { defaultLine | width = 2, color = red }
         , circle 8
             |> filled blue
         , circle 12
             |> filled purple
-            |> move weightPlacement
+            |> move ( 0, (model.slideRatio) * pendulumLength)
         , ngon 3 10
             |> filled green
             |> rotate (-pi/2)
-            |> move metronomeEndpoint
+            |> move ( 0, metronomeLength)
         ]
       |> rotate (pi + model.angle) -- display "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match.
+
     svgPendulum = 
-      svg [ version "1.1", x "0", y "0", Svg.Attributes.width "300", Svg.Attributes.height "500", viewBox "-150 -250 300 500" ]
-          [ Svg.line [ x1 "0", y1 "0", x2 "300", y2 "500", Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
+      svg [ version "1.1", x "0", y "0", Svg.Attributes.width "500", Svg.Attributes.height "700", viewBox "-250 -350 500 700" ]
+          [ Svg.line [ "0" |> x1
+                     , metronomeLength |> toString |> y1
+                     , "0" |> x2
+                     , pendulumLength |> toString |> y2
+                     , Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
           ]
   in
     div []
@@ -88,7 +93,7 @@ view model =
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
       , div floatLeft [ svgPendulum ]
-      , div floatLeft [collage 300 500 [ pendulum ] |> fromElement]
+      , div floatLeft [collage 500 700 [ pendulum ] |> fromElement]
       ]
 
 
@@ -115,11 +120,4 @@ port leftRight = leftRightSignal
 main = Signal.map view modelSignal 
 
 floatLeft = [ style [ ("float", "left") ] ]
-
-
-logo : Html
-logo =
-  svg [ version "1.1", x "0", y "0", Svg.Attributes.width "320", Svg.Attributes.height "320", viewBox "0 0 400 400" ]
-    [ Svg.line [ x1 "0", y1 "0", x2 "200", y2 "200", Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
-    ]
 
