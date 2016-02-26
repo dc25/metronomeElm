@@ -23,7 +23,6 @@ type alias Model =
   , slideRatio : Float
   , gravity : Float
   , started : Bool
-  , click : (Int, Int)
   }
 
 init =
@@ -33,10 +32,9 @@ init =
   , slideRatio = 0.3
   , gravity = -9.81
   , started = True
-  , click = (0,0)
   }
 
-type Action = NoOp | ToggleStarted | Tick | Click (Int,Int)
+type Action = NoOp | ToggleStarted | Tick 
 
 update : Action -> Model -> Model
 update action model =
@@ -53,7 +51,6 @@ update action model =
         { model | angle = pi/6, angVel = 0.0, started = not model.started } 
       else { model | started = not model.started } 
     NoOp -> model
-    Click (x,y) -> { model | click = (x,y) }
 
 view model =
   let
@@ -80,21 +77,16 @@ view model =
     svgPendulum = 
       [ Svg.g 
         [ Svg.Attributes.transform ("rotate(" ++ toString (model.angle * 180/pi)  ++ ")") ]
-        [ Svg.line [ x1 "0"
-                   , y1 (toString metronomeLength)
-                   , x2 "0"
+        [ Svg.line [ y1 (toString metronomeLength)
                    , y2 (toString pendulumLength)
                    , Svg.Attributes.style "stroke:red;stroke-width:2" ] []
 
-        , Svg.circle [ cx "0"
-                     , cy "0"
-                     , r (toString 8)
+        , Svg.circle [ r (toString 8)
                      , fill "blue"
                      ]
           []
 
-        , Svg.circle [ cx "0"
-                     , cy (toString (model.slideRatio * pendulumLength))
+        , Svg.circle [ cy (toString (model.slideRatio * pendulumLength))
                      , r (toString 12)
                      , fill "purple"
                      ]
@@ -108,8 +100,7 @@ view model =
       ]
   in
     div []
-      [ div floatLeft [ fst model.click |> toString |> Html.text
-                      , button 
+      [ div floatLeft [ button 
                           [ onClick control.address ToggleStarted ]
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
@@ -120,11 +111,9 @@ view model =
 
 control = Signal.mailbox NoOp
 
-clicks = Mouse.position |> Signal.sampleOn Mouse.clicks |> Signal.map Click 
-
 tickSignal =   (every (dt * second)) |> map (always Tick)
 
-actionSignal = Signal.mergeMany [tickSignal, control.signal, clicks]
+actionSignal = Signal.mergeMany [tickSignal, control.signal]
 
 modelSignal =  
   Signal.foldp (\action model -> update action model) init actionSignal
