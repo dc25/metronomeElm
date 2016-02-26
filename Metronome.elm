@@ -58,8 +58,9 @@ update action model =
         { model | angle = pi/6, angVel = 0.0, started = not model.started } 
       else { model | started = not model.started } 
 
-    NoOp -> model
     SetFob s -> {model | slideRatio = s}
+
+    NoOp -> model
 
 view model =
   let
