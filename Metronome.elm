@@ -1,13 +1,15 @@
 module Metronome where 
 
 import Color exposing (..)
-import String exposing (join)
+import String exposing (join, toFloat)
 import Time exposing (every, second)
 import Html exposing (br, input, h2, text, div, button, fromElement)
 import Html.Attributes as HA
+import Html.Attributes.Extra as HAE
 import Html.Events exposing (on, onClick, targetValue)
 import Graphics.Collage exposing (collage, rotate, move, filled, ngon, circle, traced, segment, group, defaultLine)
 import Svg exposing (svg)
+import Maybe exposing (withDefault)
 import Svg.Attributes exposing (version, viewBox, cx, cy, r, x, y, x1, y1, x2, y2, fill,points, transform, style, width, height)
 
 dt = 0.01
@@ -27,7 +29,6 @@ type alias Model =
   , length : Float
   , slideRatio : Float
   , started : Bool
-  , fobStr : String
   }
 
 init =
@@ -36,10 +37,9 @@ init =
   , length = 2
   , slideRatio = 0.3
   , started = True
-  , fobStr = "HI!!"
   }
 
-type Action = NoOp | ToggleStarted | SetFob String | Tick 
+type Action = NoOp | ToggleStarted | SetFob Float | Tick 
 
 update : Action -> Model -> Model
 update action model =
@@ -59,7 +59,7 @@ update action model =
       else { model | started = not model.started } 
 
     NoOp -> model
-    SetFob s -> {model | fobStr = s}
+    SetFob s -> {model | slideRatio = s}
 
 view model =
   let
@@ -115,12 +115,19 @@ view model =
                       , input 
                           [ HA.disabled model.started
                           , HA.type' "range" 
-                          , HA.min "0" 
+                          , HA.min "10" 
                           , HA.max "100" 
-                          , on "change" targetValue (Signal.message control.address << SetFob) ]
+                          , HAE.valueAsFloat (100.0 * (model.slideRatio) )
+                          , on "change" targetValue 
+                              (Signal.message control.address 
+                               << SetFob 
+                               << (\p -> p / 100.0) 
+                               << withDefault 100.0 
+                               << Result.toMaybe 
+                               << String.toFloat ) ]
                           [ ]
                       , br [] []
-                      , text model.fobStr
+                      , text ("Fob Position: " ++ toString model.slideRatio)
                       ]
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
