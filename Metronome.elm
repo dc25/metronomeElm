@@ -3,9 +3,9 @@ module Metronome where
 import Color exposing (..)
 import String exposing (join)
 import Time exposing (every, second)
-import Html exposing (Html, h2, li, text, ul, div, button, fromElement)
+import Html exposing (br, input, h2, text, div, button, fromElement)
 import Html.Attributes as HA
-import Html.Events exposing (onClick)
+import Html.Events exposing (on, onClick, targetValue)
 import Graphics.Collage exposing (collage, rotate, move, filled, ngon, circle, traced, segment, group, defaultLine)
 import Svg exposing (svg)
 import Svg.Attributes exposing (version, viewBox, cx, cy, r, x, y, x1, y1, x2, y2, fill,points, transform, style, width, height)
@@ -27,6 +27,7 @@ type alias Model =
   , length : Float
   , slideRatio : Float
   , started : Bool
+  , fobStr : String
   }
 
 init =
@@ -35,9 +36,10 @@ init =
   , length = 2
   , slideRatio = 0.3
   , started = True
+  , fobStr = "HI!!"
   }
 
-type Action = NoOp | ToggleStarted | Tick 
+type Action = NoOp | ToggleStarted | SetFob String | Tick 
 
 update : Action -> Model -> Model
 update action model =
@@ -57,6 +59,7 @@ update action model =
       else { model | started = not model.started } 
 
     NoOp -> model
+    SetFob s -> {model | fobStr = s}
 
 view model =
   let
@@ -91,18 +94,16 @@ view model =
                    , style "stroke:red;stroke-width:2" ] []
 
         , Svg.circle [ r (toString pivotDiameter)
-                     , fill "blue"
-                     ] []
+                     , fill "blue" ] []
 
-        , Svg.circle [ cy (toString (model.slideRatio * pendulumLength))
-                     , r (toString fobDiameter)
-                     , fill "purple"
+        , Svg.circle [ r (toString fobDiameter)
+                     , fill "purple" 
+                     , cy (toString (model.slideRatio * pendulumLength))
                      ] []
 
         , Svg.polygon [ points ("0," ++ toString -arrowSize ++ " " ++ toString arrowSize ++ ",0 " ++ toString -arrowSize ++ ",0")
                       , fill "lime" 
-                      , transform ("translate(0 " ++ toString metronomeLength  ++ ")")
-                      ] []
+                      , transform ("translate(0 " ++ toString metronomeLength  ++ ")") ] []
         ]
       ]
   in
@@ -110,6 +111,16 @@ view model =
       [ div floatLeft [ button 
                           [ onClick control.address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
+                      , br [] []
+                      , input 
+                          [ HA.disabled model.started
+                          , HA.type' "range" 
+                          , HA.min "0" 
+                          , HA.max "100" 
+                          , on "change" targetValue (Signal.message control.address << SetFob) ]
+                          [ ]
+                      , br [] []
+                      , text model.fobStr
                       ]
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
@@ -129,6 +140,8 @@ view model =
                       , collage w h [ collagePendulum ] |> fromElement]
       ]
 
+floatLeft = [ HA.style [ ("float", "left") ] ]
+centerTitle = [ HA.style [ ( "text-align", "center") ] ]
 
 control = Signal.mailbox NoOp
 
@@ -149,6 +162,4 @@ port leftRight = leftRightSignal
 
 main = Signal.map view modelSignal 
 
-floatLeft = [ HA.style [ ("float", "left") ] ]
-centerTitle = [ HA.style [ ( "text-align", "center") ] ]
 
