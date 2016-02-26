@@ -42,6 +42,7 @@ type Action = NoOp | ToggleStarted | Tick
 update : Action -> Model -> Model
 update action model =
   case action of
+
     Tick -> 
       if model.started then 
         let angAcc = 1.0 * (gravity / (model.slideRatio * model.length)) * sin (model.angle)
@@ -49,10 +50,12 @@ update action model =
             angle' = model.angle + angVel' * dt
         in { model | angle = angle' , angVel = angVel' }
       else model
+
     ToggleStarted -> 
       if model.started then
         { model | angle = pi/6, angVel = 0.0, started = not model.started } 
       else { model | started = not model.started } 
+
     NoOp -> model
 
 view model =
@@ -96,7 +99,7 @@ view model =
                      , fill "purple"
                      ] []
 
-        , Svg.polygon [ points "0,-arrowSize arrowSize,0 -arrowSize,0"
+        , Svg.polygon [ points ("0," ++ toString -arrowSize ++ " " ++ toString arrowSize ++ ",0 " ++ toString -arrowSize ++ ",0")
                       , fill "lime" 
                       , transform ("translate(0 " ++ toString metronomeLength  ++ ")")
                       ] []
@@ -106,7 +109,7 @@ view model =
     div []
       [ div floatLeft [ button 
                           [ onClick control.address ToggleStarted ]
-                          [ Html.text (if model.started then "Stop" else "Start") ]
+                          [ text (if model.started then "Stop" else "Start") ]
                       ]
 
       , div floatLeft [ svg 
