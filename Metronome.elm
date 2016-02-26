@@ -10,7 +10,7 @@ import Graphics.Element exposing (..)
 import Signal exposing (..)
 import Mouse 
 import Svg exposing (svg)
-import Svg.Attributes exposing (version, viewBox, x, y, x1, y1, x2, y2, fill,points, transform)
+import Svg.Attributes exposing (version, viewBox, cx, cy, r, x, y, x1, y1, x2, y2, fill,points, transform)
 import Mouse 
 
 dt = 0.01
@@ -27,10 +27,10 @@ type alias Model =
   }
 
 init =
-  { angle = pi / 4
+  { angle = pi / 6
   , angVel = 0.0
   , length = 2
-  , slideRatio = 0.8
+  , slideRatio = 0.3
   , gravity = -9.81
   , started = True
   , click = (0,0)
@@ -50,7 +50,7 @@ update action model =
       else model
     ToggleStarted -> 
       if model.started then
-        { model | angle = pi/4, angVel = 0.0, started = not model.started } 
+        { model | angle = pi/6, angVel = 0.0, started = not model.started } 
       else { model | started = not model.started } 
     NoOp -> model
     Click (x,y) -> { model | click = (x,y) }
@@ -61,30 +61,51 @@ view model =
     pendulumLength = scale * model.length 
     metronomeLength = -1.6 * pendulumLength 
 
-    pendulum =
-      group
-        [ segment ( 0, metronomeLength) (0, pendulumLength)
-            |> traced { defaultLine | width = 2, color = red }
-        , circle 8
+    collagePendulum =
+      rotate (pi-model.angle) -- canvas "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match and negate angle to flip left/right.
+        (group
+          [ segment ( 0, metronomeLength) (0, pendulumLength)
+              |> traced { defaultLine | width = 2, color = red }
+          , circle 8
             |> filled blue
-        , circle 12
+          , circle 12
             |> filled purple
             |> move ( 0, (model.slideRatio) * pendulumLength)
-        , ngon 3 10
+          , ngon 3 10
             |> filled green
             |> rotate (-pi/2)
             |> move ( 0, metronomeLength)
-        ]
-      |> rotate (pi + model.angle) -- display "zero" angle is up but pendulum "zero" angle is down so rotate by pi to make them match.
+          ])
 
     svgPendulum = 
-      svg [ version "1.1", x "0", y "0", Svg.Attributes.width "500", Svg.Attributes.height "700", viewBox "-250 -350 500 700" ]
-          [ Svg.line [ "0" |> x1
-                     , metronomeLength |> toString |> y1
-                     , "0" |> x2
-                     , pendulumLength |> toString |> y2
-                     , Svg.Attributes.style "stroke:rgb(255,0,0);stroke-width:2" ] []
-          ]
+      [ Svg.g 
+        [ Svg.Attributes.transform ("rotate(" ++ toString (model.angle * 180/pi)  ++ ")") ]
+        [ Svg.line [ x1 "0"
+                   , y1 (toString metronomeLength)
+                   , x2 "0"
+                   , y2 (toString pendulumLength)
+                   , Svg.Attributes.style "stroke:red;stroke-width:2" ] []
+
+        , Svg.circle [ cx "0"
+                     , cy "0"
+                     , r (toString 8)
+                     , fill "blue"
+                     ]
+          []
+
+        , Svg.circle [ cx "0"
+                     , cy (toString (model.slideRatio * pendulumLength))
+                     , r (toString 12)
+                     , fill "purple"
+                     ]
+          []
+
+        , Svg.polygon [ points "0,-10 10,0 -10,0"
+                      , fill "lime" 
+                      , Svg.Attributes.transform ("translate(0 " ++ toString metronomeLength  ++ ")")
+                      ] []
+        ]
+      ]
   in
     div []
       [ div floatLeft [ fst model.click |> toString |> Html.text
@@ -92,8 +113,8 @@ view model =
                           [ onClick control.address ToggleStarted ]
                           [ Html.text (if model.started then "Stop" else "Start") ]
                       ]
-      , div floatLeft [ svgPendulum ]
-      , div floatLeft [collage 500 700 [ pendulum ] |> fromElement]
+      , div floatLeft [ svg [ version "1.1", x "0", y "0", Svg.Attributes.width "500", Svg.Attributes.height "700", viewBox "-250 -350 500 700" ] svgPendulum ]
+      , div floatLeft [collage 500 700 [ collagePendulum ] |> fromElement]
       ]
 
 
