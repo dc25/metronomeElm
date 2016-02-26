@@ -108,10 +108,12 @@ view model =
       ]
   in
     div []
-      [ div floatLeft [ button 
+      [ div floatLeft [ text "Stop To Adjust Fob: "
+                      , button 
                           [ onClick control.address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
                       , br [] []
+                      , text "Adjust Fob Position: "
                       , input 
                           [ HA.disabled model.started
                           , HA.type' "range" 
