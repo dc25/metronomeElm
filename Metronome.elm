@@ -3,7 +3,7 @@ module Metronome where
 import Color exposing (..)
 import String exposing (join)
 import Time exposing (every, second)
-import Html exposing (Html, li, text, ul, div, button, fromElement)
+import Html exposing (Html, h2, li, text, ul, div, button, fromElement)
 import Html.Attributes as HA
 import Html.Events exposing (onClick)
 import Graphics.Collage exposing (collage, rotate, move, filled, ngon, circle, traced, segment, group, defaultLine)
@@ -112,7 +112,8 @@ view model =
                           [ text (if model.started then "Stop" else "Start") ]
                       ]
 
-      , div floatLeft [ svg 
+      , div floatLeft [ h2 centerTitle [text "SVG"]
+                      , svg 
                           [ version "1.1"
                           , width (toString w)
                           , height (toString h)
@@ -124,7 +125,8 @@ view model =
                           svgPendulum 
                       ]
 
-      , div floatLeft [ collage w h [ collagePendulum ] |> fromElement]
+      , div floatLeft [ h2 centerTitle [text "Collage"]
+                      , collage w h [ collagePendulum ] |> fromElement]
       ]
 
 
@@ -148,4 +150,5 @@ port leftRight = leftRightSignal
 main = Signal.map view modelSignal 
 
 floatLeft = [ HA.style [ ("float", "left") ] ]
+centerTitle = [ HA.style [ ( "text-align", "center") ] ]
 
