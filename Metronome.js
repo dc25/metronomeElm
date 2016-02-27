@@ -11215,7 +11215,8 @@ Elm.Metronome.make = function (_elm) {
    $String = Elm.String.make(_elm),
    $Svg = Elm.Svg.make(_elm),
    $Svg$Attributes = Elm.Svg.Attributes.make(_elm),
-   $Time = Elm.Time.make(_elm);
+   $Time = Elm.Time.make(_elm),
+   $Transform2D = Elm.Transform2D.make(_elm);
    var _op = {};
    var centerTitle = _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "text-align",_1: "center"}]))]);
    var floatLeft = _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "float",_1: "left"}]))]);
@@ -11256,45 +11257,32 @@ Elm.Metronome.make = function (_elm) {
    var ToggleStarted = {ctor: "ToggleStarted"};
    var NoOp = {ctor: "NoOp"};
    var control = $Signal.mailbox(NoOp);
-   var Model = F7(function (a,b,c,d,e,f,g) {    return {angle: a,angVel: b,length: c,slideRatio: d,started: e,pattern: f,patternIndex: g};});
+   var Model = F6(function (a,b,c,d,e,f) {    return {angle: a,angVel: b,slideRatio: c,started: d,pattern: e,patternIndex: f};});
    var startingAngle = $Basics.pi / 6;
-   var init = {angle: startingAngle,angVel: 0.0,length: 2,slideRatio: 0.3,started: true,pattern: HL,patternIndex: 0};
+   var init = {angle: startingAngle,angVel: 0.0,slideRatio: 0.5,started: true,pattern: HL,patternIndex: 0};
    var arrowSize = 10;
    var fobDiameter = 12;
    var pivotDiameter = 8;
    var h = 700;
    var w = 500;
+   var pendulumLength = 1.0;
    var gravity = -9.81;
-   var scale = 100;
+   var scale = 200;
    var view = F2(function (address,model) {
-      var pendulumLength = scale * model.length;
-      var metronomeLength = -1.6 * pendulumLength;
-      var collagePendulum = A2($Graphics$Collage.rotate,
-      $Basics.pi - model.angle,
-      $Graphics$Collage.group(_U.list([A2($Graphics$Collage.traced,
-                                      _U.update($Graphics$Collage.defaultLine,{width: 2,color: $Color.red}),
-                                      A2($Graphics$Collage.segment,{ctor: "_Tuple2",_0: 0,_1: metronomeLength},{ctor: "_Tuple2",_0: 0,_1: pendulumLength}))
-                                      ,A2($Graphics$Collage.filled,$Color.blue,$Graphics$Collage.circle(pivotDiameter))
-                                      ,A2($Graphics$Collage.move,
-                                      {ctor: "_Tuple2",_0: 0,_1: model.slideRatio * pendulumLength},
-                                      A2($Graphics$Collage.filled,$Color.purple,$Graphics$Collage.circle(fobDiameter)))
-                                      ,A2($Graphics$Collage.move,
-                                      {ctor: "_Tuple2",_0: 0,_1: metronomeLength},
-                                      A2($Graphics$Collage.rotate,
-                                      (0 - $Basics.pi) / 2,
-                                      A2($Graphics$Collage.filled,$Color.green,A2($Graphics$Collage.ngon,3,arrowSize))))])));
+      var pendulumPlacement = scale * pendulumLength;
+      var metronomePlacement = -1.6 * pendulumPlacement;
       var svgPendulum = A2($Svg.g,
       _U.list([$Svg$Attributes.transform(A2($Basics._op["++"],"rotate(",A2($Basics._op["++"],$Basics.toString(model.angle * 180 / $Basics.pi),")")))]),
       _U.list([A2($Svg.line,
-              _U.list([$Svg$Attributes.y1($Basics.toString(metronomeLength))
-                      ,$Svg$Attributes.y2($Basics.toString(pendulumLength))
+              _U.list([$Svg$Attributes.y1($Basics.toString(metronomePlacement))
+                      ,$Svg$Attributes.y2($Basics.toString(pendulumPlacement))
                       ,$Svg$Attributes.style("stroke:red;stroke-width:2")]),
               _U.list([]))
               ,A2($Svg.circle,_U.list([$Svg$Attributes.r($Basics.toString(pivotDiameter)),$Svg$Attributes.fill("blue")]),_U.list([]))
               ,A2($Svg.circle,
               _U.list([$Svg$Attributes.r($Basics.toString(fobDiameter))
                       ,$Svg$Attributes.fill("purple")
-                      ,$Svg$Attributes.cy($Basics.toString(model.slideRatio * pendulumLength))]),
+                      ,$Svg$Attributes.cy($Basics.toString(model.slideRatio * pendulumPlacement))]),
               _U.list([]))
               ,A2($Svg.polygon,
               _U.list([$Svg$Attributes.points(A2($Basics._op["++"],
@@ -11307,8 +11295,26 @@ Elm.Metronome.make = function (_elm) {
                       $Basics.toString(arrowSize),
                       A2($Basics._op["++"],",0 ",A2($Basics._op["++"],$Basics.toString(0 - arrowSize),",0")))))))
                       ,$Svg$Attributes.fill("lime")
-                      ,$Svg$Attributes.transform(A2($Basics._op["++"],"translate(0 ",A2($Basics._op["++"],$Basics.toString(metronomeLength),")")))]),
+                      ,$Svg$Attributes.transform(A2($Basics._op["++"],"translate(0 ",A2($Basics._op["++"],$Basics.toString(metronomePlacement),")")))]),
               _U.list([]))]));
+      var collagePendulum = A2($Graphics$Collage.groupTransform,
+      A6($Transform2D.matrix,1,0,0,-1,0,0),
+      _U.list([A2($Graphics$Collage.rotate,
+      model.angle,
+      $Graphics$Collage.group(_U.list([A2($Graphics$Collage.traced,
+                                      _U.update($Graphics$Collage.defaultLine,{width: 2,color: $Color.red}),
+                                      A2($Graphics$Collage.segment,
+                                      {ctor: "_Tuple2",_0: 0,_1: metronomePlacement},
+                                      {ctor: "_Tuple2",_0: 0,_1: pendulumPlacement}))
+                                      ,A2($Graphics$Collage.filled,$Color.blue,$Graphics$Collage.circle(pivotDiameter))
+                                      ,A2($Graphics$Collage.move,
+                                      {ctor: "_Tuple2",_0: 0,_1: model.slideRatio * pendulumPlacement},
+                                      A2($Graphics$Collage.filled,$Color.purple,$Graphics$Collage.circle(fobDiameter)))
+                                      ,A2($Graphics$Collage.move,
+                                      {ctor: "_Tuple2",_0: 0,_1: metronomePlacement},
+                                      A2($Graphics$Collage.rotate,
+                                      (0 - $Basics.pi) / 2,
+                                      A2($Graphics$Collage.filled,$Color.green,A2($Graphics$Collage.ngon,3,arrowSize))))])))]));
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.h1,centerTitle,_U.list([$Html.text("Metronome")]))
@@ -11324,7 +11330,7 @@ Elm.Metronome.make = function (_elm) {
                       ,A2($Html.input,
                       _U.list([$Html$Attributes.disabled(model.started)
                               ,$Html$Attributes.type$("range")
-                              ,$Html$Attributes.min("10")
+                              ,$Html$Attributes.min("30")
                               ,$Html$Attributes.max("100")
                               ,$Html$Attributes$Extra.valueAsFloat(100.0 * model.slideRatio)
                               ,A3($Html$Events.on,
@@ -11366,7 +11372,7 @@ Elm.Metronome.make = function (_elm) {
       var _p3 = action;
       switch (_p3.ctor)
       {case "Tick": if (model.started) {
-                 var angAcc = 1.0 * (gravity / (model.slideRatio * model.length)) * $Basics.sin(model.angle);
+                 var angAcc = 1.0 * (gravity / (model.slideRatio * pendulumLength)) * $Basics.sin(model.angle);
                  var angVel$ = model.angVel + angAcc * dt;
                  var angle$ = model.angle + angVel$ * dt;
                  var click = !_U.eq(_U.cmp(model.angle,0) > 0,_U.cmp(angle$,0) > 0);
@@ -11389,6 +11395,7 @@ Elm.Metronome.make = function (_elm) {
                                   ,dt: dt
                                   ,scale: scale
                                   ,gravity: gravity
+                                  ,pendulumLength: pendulumLength
                                   ,w: w
                                   ,h: h
                                   ,pivotDiameter: pivotDiameter
