@@ -11227,7 +11227,7 @@ Elm.Metronome.make = function (_elm) {
          case "HLLL": return "HLLL";
          default: return "HLLLLL";}
    };
-   var clickType = function (model) {
+   var clickIndexAndType = function (model) {
       var h = A3($String.slice,model.patternIndex - 1,1,patternString(model.pattern));
       return {ctor: "_Tuple2",_0: model.patternIndex,_1: _U.eq(h,"H")};
    };
@@ -11256,8 +11256,9 @@ Elm.Metronome.make = function (_elm) {
    var ToggleStarted = {ctor: "ToggleStarted"};
    var NoOp = {ctor: "NoOp"};
    var control = $Signal.mailbox(NoOp);
-   var init = {angle: $Basics.pi / 6,angVel: 0.0,length: 2,slideRatio: 0.3,started: true,pattern: HL,patternIndex: 0};
    var Model = F7(function (a,b,c,d,e,f,g) {    return {angle: a,angVel: b,length: c,slideRatio: d,started: e,pattern: f,patternIndex: g};});
+   var startingAngle = $Basics.pi / 6;
+   var init = {angle: startingAngle,angVel: 0.0,length: 2,slideRatio: 0.3,started: true,pattern: HL,patternIndex: 0};
    var arrowSize = 10;
    var fobDiameter = 12;
    var pivotDiameter = 8;
@@ -11282,7 +11283,7 @@ Elm.Metronome.make = function (_elm) {
                                       A2($Graphics$Collage.rotate,
                                       (0 - $Basics.pi) / 2,
                                       A2($Graphics$Collage.filled,$Color.green,A2($Graphics$Collage.ngon,3,arrowSize))))])));
-      var svgPendulum = _U.list([A2($Svg.g,
+      var svgPendulum = A2($Svg.g,
       _U.list([$Svg$Attributes.transform(A2($Basics._op["++"],"rotate(",A2($Basics._op["++"],$Basics.toString(model.angle * 180 / $Basics.pi),")")))]),
       _U.list([A2($Svg.line,
               _U.list([$Svg$Attributes.y1($Basics.toString(metronomeLength))
@@ -11307,7 +11308,7 @@ Elm.Metronome.make = function (_elm) {
                       A2($Basics._op["++"],",0 ",A2($Basics._op["++"],$Basics.toString(0 - arrowSize),",0")))))))
                       ,$Svg$Attributes.fill("lime")
                       ,$Svg$Attributes.transform(A2($Basics._op["++"],"translate(0 ",A2($Basics._op["++"],$Basics.toString(metronomeLength),")")))]),
-              _U.list([]))]))]);
+              _U.list([]))]));
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.h1,centerTitle,_U.list([$Html.text("Metronome")]))
@@ -11354,7 +11355,7 @@ Elm.Metronome.make = function (_elm) {
                               ,$Svg$Attributes.viewBox(A2($String.join,
                               " ",
                               _U.list([$Basics.toString((0 - w) / 2 | 0),$Basics.toString((0 - h) / 2 | 0),$Basics.toString(w),$Basics.toString(h)])))]),
-                      svgPendulum)]))
+                      _U.list([svgPendulum]))]))
               ,A2($Html.div,
               floatLeft,
               _U.list([A2($Html.h2,centerTitle,_U.list([$Html.text("Collage")]))
@@ -11373,7 +11374,7 @@ Elm.Metronome.make = function (_elm) {
                  return _U.update(model,{angle: angle$,angVel: angVel$,patternIndex: patternIndex$});
               } else return model;
          case "ToggleStarted": return model.started ? _U.update(model,
-           {angle: $Basics.pi / 6,angVel: 0.0,started: $Basics.not(model.started),patternIndex: 0}) : _U.update(model,{started: $Basics.not(model.started)});
+           {angle: startingAngle,angVel: 0.0,started: $Basics.not(model.started),patternIndex: 0}) : _U.update(model,{started: $Basics.not(model.started)});
          case "SetFob": return _U.update(model,{slideRatio: _p3._0});
          case "SetPattern": return _U.update(model,{pattern: _p3._0});
          default: return model;}
@@ -11381,7 +11382,7 @@ Elm.Metronome.make = function (_elm) {
    var tickSignal = A2($Signal.map,$Basics.always(Tick),$Time.every(dt * $Time.second));
    var actionSignal = $Signal.mergeMany(_U.list([tickSignal,control.signal]));
    var modelSignal = A3($Signal.foldp,F2(function (action,model) {    return A2(update,action,model);}),init,actionSignal);
-   var highLowTickSignal = A2($Signal.map,$Basics.snd,$Signal.dropRepeats(A2($Signal.map,clickType,modelSignal)));
+   var highLowTickSignal = A2($Signal.map,$Basics.snd,$Signal.dropRepeats(A2($Signal.map,clickIndexAndType,modelSignal)));
    var highLowTick = Elm.Native.Port.make(_elm).outboundSignal("highLowTick",function (v) {    return v;},highLowTickSignal);
    var main = A2($Signal.map,view(control.address),modelSignal);
    return _elm.Metronome.values = {_op: _op
@@ -11393,6 +11394,7 @@ Elm.Metronome.make = function (_elm) {
                                   ,pivotDiameter: pivotDiameter
                                   ,fobDiameter: fobDiameter
                                   ,arrowSize: arrowSize
+                                  ,startingAngle: startingAngle
                                   ,Model: Model
                                   ,init: init
                                   ,NoOp: NoOp
@@ -11414,7 +11416,7 @@ Elm.Metronome.make = function (_elm) {
                                   ,tickSignal: tickSignal
                                   ,actionSignal: actionSignal
                                   ,modelSignal: modelSignal
-                                  ,clickType: clickType
+                                  ,clickIndexAndType: clickIndexAndType
                                   ,highLowTickSignal: highLowTickSignal
                                   ,main: main};
 };
