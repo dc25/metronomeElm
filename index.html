@@ -21,7 +21,7 @@
     var metronomeDiv = document.getElementById('metronome');
     var metronome = Elm.embed(Elm.Metronome, metronomeDiv);
 
-    metronome.ports.leftRight.subscribe ( 
+    metronome.ports.highLowTick.subscribe ( 
       function(event) { if (event) { tick(); } else { tock(); } } 
     )
 

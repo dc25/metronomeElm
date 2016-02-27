@@ -4,7 +4,7 @@ import Maybe exposing (withDefault)
 import Color exposing (..)
 import String exposing (join, toFloat)
 import Time exposing (every, second)
-import Html exposing (Html, br, input, h2, text, div, button, fromElement)
+import Html exposing (Html, br, input, h1, h2, text, div, button, fromElement)
 import Html.Attributes as HA
 import Html.Attributes.Extra as HAE
 import Html.Events exposing (on, onClick, targetValue, targetChecked)
@@ -30,6 +30,7 @@ type alias Model =
   , slideRatio : Float
   , started : Bool
   , pattern : Pattern
+  , patternIndex : Int
   }
 
 init =
@@ -39,11 +40,20 @@ init =
   , slideRatio = 0.3
   , started = True
   , pattern = HL
+  , patternIndex = 0
   }
 
 type Action = NoOp | ToggleStarted | SetFob Float | SetPattern Pattern | Tick 
 
 type Pattern = HL | HLLL | HLL | HLLLLL
+
+patternString : Pattern -> String
+patternString p =
+  case p of 
+    HL -> "HL"
+    HLL -> "HLL"
+    HLLL -> "HLLL"
+    HLLLLL -> "HLLLLL"
 
 update : Action -> Model -> Model
 update action model =
@@ -54,12 +64,14 @@ update action model =
         let angAcc = 1.0 * (gravity / (model.slideRatio * model.length)) * sin (model.angle)
             angVel' = model.angVel + angAcc * dt
             angle' = model.angle + angVel' * dt
-        in { model | angle = angle' , angVel = angVel' }
+            click = ((model.angle > 0) /= (angle' > 0))
+            patternIndex' = if (click) then (model.patternIndex+1) % String.length (patternString model.pattern) else model.patternIndex
+        in { model | angle = angle', angVel = angVel', patternIndex = patternIndex'}
       else model
 
     ToggleStarted -> 
       if model.started then
-        { model | angle = pi/6, angVel = 0.0, started = not model.started } 
+        { model | angle = pi/6, angVel = 0.0, started = not model.started, patternIndex = 0 } 
       else { model | started = not model.started } 
 
     SetFob s -> {model | slideRatio = s}
@@ -115,10 +127,13 @@ view address model =
       ]
   in
     div []
-      [ div floatLeft ([ text "Stop To Adjust Fob: "
+      [ h1 centerTitle [text "Metronome"]
+      , div floatLeft ([ h2 centerTitle [text "Controls"]
+                      , text "Stop To Adjust Fob: "
                       , button 
                           [ onClick address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
+                      , br [] []
                       , br [] []
                       , text "Adjust Fob Position: "
                       , input 
@@ -138,11 +153,14 @@ view address model =
                       , br [] []
                       , text ("Fob Position: " ++ toString model.slideRatio)
                       , br [] []
+                      , br [] []
+                      , text ("Beat Pattern: ")
+                      , br [] []
                       ]
-                      ++ radio address model HL "HL"
-                      ++ radio address model HLL "HLL"
-                      ++ radio address model HLLL "HLLL"
-                      ++ radio address model HLLLLL "HLLLLL")
+                      ++ radio address model HL 
+                      ++ radio address model HLL 
+                      ++ radio address model HLLL 
+                      ++ radio address model HLLLLL )
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
                       , svg 
@@ -161,8 +179,8 @@ view address model =
                       , collage w h [ collagePendulum ] |> fromElement]
       ] 
 
-radio : Signal.Address Action -> Model -> Pattern -> String -> List Html
-radio address model pattern name =
+radio : Signal.Address Action -> Model -> Pattern -> List Html
+radio address model pattern =
   [ input
       [ HA.disabled model.started
       , HA.type' "radio"
@@ -170,7 +188,7 @@ radio address model pattern name =
       , on "change" targetChecked (\_ -> Signal.message address (SetPattern pattern))
       ]
       []
-  , text name
+  , patternString pattern |> text 
   , br [] []
   ]
 
@@ -179,21 +197,21 @@ centerTitle = [ HA.style [ ( "text-align", "center") ] ]
 
 control = Signal.mailbox NoOp
 
-tickSignal =   (every (dt * second)) |> Signal.map (always Tick)
+tickSignal = (every (dt * second)) |> Signal.map (always Tick)
 
 actionSignal = Signal.mergeMany [tickSignal, control.signal]
 
 modelSignal =  
   Signal.foldp (\action model -> update action model) init actionSignal
 
-leftRightSignal = 
-  modelSignal
-  |> Signal.map (\model -> model.angle < 0) 
-  |> Signal.dropRepeats 
+clickType model = 
+  let h = String.slice (model.patternIndex-1) 1 (patternString model.pattern)
+  in (model.patternIndex, h == "H")
 
-port leftRight : Signal Bool
-port leftRight = leftRightSignal
+highLowTickSignal = 
+  modelSignal |> Signal.map clickType |> Signal.dropRepeats |> Signal.map snd
+
+port highLowTick : Signal Bool
+port highLowTick = highLowTickSignal
 
 main = Signal.map (view control.address) modelSignal 
-
-
