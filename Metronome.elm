@@ -1,15 +1,15 @@
 module Metronome where 
 
+import Maybe exposing (withDefault)
 import Color exposing (..)
 import String exposing (join, toFloat)
 import Time exposing (every, second)
-import Html exposing (br, input, h2, text, div, button, fromElement)
+import Html exposing (Html, br, input, h2, text, div, button, fromElement)
 import Html.Attributes as HA
 import Html.Attributes.Extra as HAE
-import Html.Events exposing (on, onClick, targetValue)
+import Html.Events exposing (on, onClick, targetValue, targetChecked)
 import Graphics.Collage exposing (collage, rotate, move, filled, ngon, circle, traced, segment, group, defaultLine)
 import Svg exposing (svg)
-import Maybe exposing (withDefault)
 import Svg.Attributes exposing (version, viewBox, cx, cy, r, x, y, x1, y1, x2, y2, fill,points, transform, style, width, height)
 
 dt = 0.01
@@ -29,6 +29,7 @@ type alias Model =
   , length : Float
   , slideRatio : Float
   , started : Bool
+  , pattern : Pattern
   }
 
 init =
@@ -37,9 +38,12 @@ init =
   , length = 2
   , slideRatio = 0.3
   , started = True
+  , pattern = HL
   }
 
-type Action = NoOp | ToggleStarted | SetFob Float | Tick 
+type Action = NoOp | ToggleStarted | SetFob Float | SetPattern Pattern | Tick 
+
+type Pattern = HL | HLLL | HLL | HLLLLL
 
 update : Action -> Model -> Model
 update action model =
@@ -59,6 +63,8 @@ update action model =
       else { model | started = not model.started } 
 
     SetFob s -> {model | slideRatio = s}
+
+    SetPattern p -> {model | pattern = p}
 
     NoOp -> model
 
@@ -109,7 +115,7 @@ view model =
       ]
   in
     div []
-      [ div floatLeft [ text "Stop To Adjust Fob: "
+      [ div floatLeft ([ text "Stop To Adjust Fob: "
                       , button 
                           [ onClick control.address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
@@ -131,7 +137,12 @@ view model =
                           [ ]
                       , br [] []
                       , text ("Fob Position: " ++ toString model.slideRatio)
+                      , br [] []
                       ]
+                      ++ radio control.address model HL "HL"
+                      ++ radio control.address model HLL "HLL"
+                      ++ radio control.address model HLLL "HLLL"
+                      ++ radio control.address model HLLLLL "HLLLLL")
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
                       , svg 
@@ -148,7 +159,20 @@ view model =
 
       , div floatLeft [ h2 centerTitle [text "Collage"]
                       , collage w h [ collagePendulum ] |> fromElement]
+      ] 
+
+radio : Signal.Address Action -> Model -> Pattern -> String -> List Html
+radio address model pattern name =
+  [ input
+      [ HA.disabled model.started
+      , HA.type' "radio"
+      , HA.checked (model.pattern == pattern)
+      , on "change" targetChecked (\_ -> Signal.message address (SetPattern pattern))
       ]
+      []
+  , text name
+  , br [] []
+  ]
 
 floatLeft = [ HA.style [ ("float", "left") ] ]
 centerTitle = [ HA.style [ ( "text-align", "center") ] ]
