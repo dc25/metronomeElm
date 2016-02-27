@@ -68,7 +68,7 @@ update action model =
 
     NoOp -> model
 
-view model =
+view address model =
   let
 
     pendulumLength = scale * model.length 
@@ -117,7 +117,7 @@ view model =
     div []
       [ div floatLeft ([ text "Stop To Adjust Fob: "
                       , button 
-                          [ onClick control.address ToggleStarted ]
+                          [ onClick address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
                       , br [] []
                       , text "Adjust Fob Position: "
@@ -128,7 +128,7 @@ view model =
                           , HA.max "100" 
                           , HAE.valueAsFloat (100.0 * (model.slideRatio) )
                           , on "change" targetValue 
-                              (Signal.message control.address 
+                              (Signal.message address 
                                << SetFob 
                                << (\p -> p / 100.0) 
                                << withDefault 100.0 
@@ -139,10 +139,10 @@ view model =
                       , text ("Fob Position: " ++ toString model.slideRatio)
                       , br [] []
                       ]
-                      ++ radio control.address model HL "HL"
-                      ++ radio control.address model HLL "HLL"
-                      ++ radio control.address model HLLL "HLLL"
-                      ++ radio control.address model HLLLLL "HLLLLL")
+                      ++ radio address model HL "HL"
+                      ++ radio address model HLL "HLL"
+                      ++ radio address model HLLL "HLLL"
+                      ++ radio address model HLLLLL "HLLLLL")
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
                       , svg 
@@ -194,6 +194,6 @@ leftRightSignal =
 port leftRight : Signal Bool
 port leftRight = leftRightSignal
 
-main = Signal.map view modelSignal 
+main = Signal.map (view control.address) modelSignal 
 
 
