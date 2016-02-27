@@ -141,6 +141,7 @@ view address model =
                       , br [] []
                       , br [] []
                       , text "Adjust Fob Position: "
+                      , br [] []
                       , input -- slider for fob position.
                           [ HA.disabled model.started
                           , HA.type' "range" 

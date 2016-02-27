@@ -11327,6 +11327,7 @@ Elm.Metronome.make = function (_elm) {
                       ,A2($Html.br,_U.list([]),_U.list([]))
                       ,A2($Html.br,_U.list([]),_U.list([]))
                       ,$Html.text("Adjust Fob Position: ")
+                      ,A2($Html.br,_U.list([]),_U.list([]))
                       ,A2($Html.input,
                       _U.list([$Html$Attributes.disabled(model.started)
                               ,$Html$Attributes.type$("range")
