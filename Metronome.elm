@@ -22,6 +22,7 @@ h = 700
 pivotDiameter = 8
 fobDiameter = 12
 arrowSize = 10
+startingAngle = pi / 6 
 
 type alias Model =
   { angle : Float
@@ -34,7 +35,7 @@ type alias Model =
   }
 
 init =
-  { angle = pi / 6
+  { angle = startingAngle
   , angVel = 0.0
   , length = 2
   , slideRatio = 0.3
@@ -71,7 +72,7 @@ update action model =
 
     ToggleStarted -> 
       if model.started then
-        { model | angle = pi/6, angVel = 0.0, started = not model.started, patternIndex = 0 } 
+        { model | angle = startingAngle, angVel = 0.0, started = not model.started, patternIndex = 0 } 
       else { model | started = not model.started } 
 
     SetFob s -> {model | slideRatio = s}
@@ -106,7 +107,7 @@ view address model =
           ])
 
     svgPendulum = 
-      [ Svg.g 
+      Svg.g 
         [ transform ("rotate(" ++ toString (model.angle * 180/pi)  ++ ")") ]
         [ Svg.line [ y1 (toString metronomeLength)
                    , y2 (toString pendulumLength)
@@ -120,11 +121,13 @@ view address model =
                      , cy (toString (model.slideRatio * pendulumLength))
                      ] []
 
-        , Svg.polygon [ points ("0," ++ toString -arrowSize ++ " " ++ toString arrowSize ++ ",0 " ++ toString -arrowSize ++ ",0")
+        , Svg.polygon [ points (
+                          "0," ++ toString -arrowSize ++ " " 
+                          ++ toString arrowSize ++ ",0 " 
+                          ++ toString -arrowSize ++ ",0")
                       , fill "lime" 
                       , transform ("translate(0 " ++ toString metronomeLength  ++ ")") ] []
         ]
-      ]
   in
     div []
       [ h1 centerTitle [text "Metronome"]
@@ -167,17 +170,18 @@ view address model =
                           [ version "1.1"
                           , width (toString w)
                           , height (toString h)
-                          , join " " [-w//2 |> toString
-                                     ,-h//2 |> toString
-                                     ,    w |> toString
-                                     ,    h |> toString ] |> viewBox
+                          , viewBox (join " " 
+                                       [-w//2 |> toString
+                                       ,-h//2 |> toString
+                                       ,    w |> toString
+                                       ,    h |> toString ])
                           ] 
-                          svgPendulum 
+                          [ svgPendulum ]
                       ]
 
       , div floatLeft [ h2 centerTitle [text "Collage"]
-                      , collage -- collage to hold pendulum
-                          w h [ collagePendulum ] 
+                      , collage w h -- collage to hold pendulum
+                          [ collagePendulum ] 
                         |> fromElement
                       ]
       ] 
@@ -207,12 +211,15 @@ actionSignal = Signal.mergeMany [tickSignal, control.signal]
 modelSignal =  
   Signal.foldp (\action model -> update action model) init actionSignal
 
-clickType model = 
+clickIndexAndType model = 
   let h = String.slice (model.patternIndex-1) 1 (patternString model.pattern)
   in (model.patternIndex, h == "H")
 
 highLowTickSignal = 
-  modelSignal |> Signal.map clickType |> Signal.dropRepeats |> Signal.map snd
+  modelSignal 
+    |> Signal.map clickIndexAndType 
+    |> Signal.dropRepeats 
+    |> Signal.map snd
 
 port highLowTick : Signal Bool
 port highLowTick = highLowTickSignal
