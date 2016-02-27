@@ -130,13 +130,13 @@ view address model =
       [ h1 centerTitle [text "Metronome"]
       , div floatLeft ([ h2 centerTitle [text "Controls"]
                       , text "Stop To Adjust Fob: "
-                      , button 
+                      , button -- start/stop toggle button.
                           [ onClick address ToggleStarted ]
                           [ text (if model.started then "Stop" else "Start") ]
                       , br [] []
                       , br [] []
                       , text "Adjust Fob Position: "
-                      , input 
+                      , input -- slider for fob position.
                           [ HA.disabled model.started
                           , HA.type' "range" 
                           , HA.min "10" 
@@ -163,7 +163,7 @@ view address model =
                       ++ radio address model HLLLLL )
 
       , div floatLeft [ h2 centerTitle [text "SVG"]
-                      , svg 
+                      , svg -- svg element to hold pendulum
                           [ version "1.1"
                           , width (toString w)
                           , height (toString h)
@@ -176,7 +176,10 @@ view address model =
                       ]
 
       , div floatLeft [ h2 centerTitle [text "Collage"]
-                      , collage w h [ collagePendulum ] |> fromElement]
+                      , collage -- collage to hold pendulum
+                          w h [ collagePendulum ] 
+                        |> fromElement
+                      ]
       ] 
 
 radio : Signal.Address Action -> Model -> Pattern -> List Html
