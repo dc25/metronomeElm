@@ -1,0 +1,28 @@
+
+<div id="metronome" ></div>
+
+<div class="audiocontainer">
+    <audio id="tick" preload="auto"><source src="audio/tick.mp3" type="audio/wav"></audio>
+    <audio id="tock" preload="auto"><source src="audio/tock.mp3" type="audio/wav"></audio>
+</div>
+
+<script type="text/javascript" src="Metronome.js"></script>
+
+<script type="text/javascript">
+
+    function tick() {
+        document.getElementById('tick').play();
+    }
+
+    function tock() {
+        document.getElementById('tock').play();
+    }
+
+    var metronomeDiv = document.getElementById('metronome');
+    var metronome = Elm.embed(Elm.Metronome, metronomeDiv);
+
+    metronome.ports.highLowTick.subscribe ( 
+      function(event) { if (event) { tick(); } else { tock(); } } 
+    )
+
+</script>
