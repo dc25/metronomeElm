@@ -4,4 +4,6 @@
 
 Demo: http://dc25.github.io/metronomeElm/
 
-This project/exercise started out as an implementation of the rosetta code task "Metronome", http://rosettacode.org/wiki/Metronome .  Along the way I decided to try implementing the graphics in SVG and for comparision purposes I left the original collage functionality in place.
+This project/exercise started out as an implementation of the rosetta code task "Metronome": http://rosettacode.org/wiki/Metronome .  Along the way I decided to try implementing the graphics in SVG and for comparision purposes I left the original collage code/functionality in place.
+
+The sound is a wooden spatula tapping a wooden cutting board.
